@@ -2,6 +2,7 @@ import json
 import math
 import operator
 from functools import reduce
+from timeit import timeit
 
 prob1 = [
     [0, 1, 0, 0, 0, 1],  # s0, the initial state, goes to s1 and s5 with equal probability
@@ -43,12 +44,12 @@ def path_prob(path, states):
     
     :param path: indices of states in path
     :param states: tree
-    :return: fractional probability
+    :return: numerators and denominators of probabilities in path
     """
-    numerator = reduce(operator.mul, [states[path[x]][path[x + 1]] for x in range(len(path) - 1)])
-    denominator = reduce(operator.mul, [sum(states[x]) for x in path[:-1]])
+    numerators = [states[path[x]][path[x+1]] for x in range(len(path)-1)]
+    denominators = [sum(states[x]) for x in path[:-1]]
     
-    return numerator, denominator
+    return numerators, denominators
 
 
 def nice_print(item, prune=False):
@@ -162,18 +163,44 @@ def answer2(states):
     terminals = [i for i, x in enumerate(states) if sum(x) == 0]
     basics, loops = explore(0, states, terminals)
     
-    loops = [((y[1], y[1] - y[0]), x) for x, y in zip(loops, (path_prob(z, states) for z in loops))]
+    loop_probs = [(set(x), path_prob(x, states)) for x in loops]
     
-    # result = []
+    result = []
     
-    grouped = {x: [y for y in basics if getlast(y) == x] for x in terminals}
+    grouped = {x: [y for y in basics if y[-1] == x] for x in terminals}
     
-    print([path_prob(x, states) for x in basics])
-    print(loops)
+    grouped_basic_probs = {x: [path_prob(z, states) for z in y] for x, y in grouped.items()}
     
-    # loop_groups = {x[0]: for x in loops}
+    grouped_loop_probs = {x: [reduce(operator.add, [w[1] for w in loop_probs if w[0].intersection(z)]) for z in y]
+                          for x, y in grouped.items()}
     
-    print(grouped)
+    # combined_probs = {x: [] for x in terminals}
+    
+    for x in terminals:
+        # print(grouped_basic_probs[x])
+        for y in grouped_basic_probs[x]:
+            for z in y:
+                print(z)
+        print("------------------")
+        # print(grouped_loop_probs[x])
+        for y in grouped_loop_probs[x]:
+            for z in y:
+                print(z)
+        print()
+    
+    print("wew")
+    
+    # grouped_probabilities = {x: y+ for x, y in grouped_probabilities}
+    #
+    # loop_groups = {x[0]: [y for y in basics if x[1].intersection(y)] for x in loops}
+    #
+    # print(loop_groups)
+    #
+    # print([path_prob(x, states) for x in basics])
+    # print(loops)
+    #
+    # print(grouped)
 
 
+# print(timeit('answer2(prob1)', globals=globals(), number=1000000))
 answer2(prob1)
