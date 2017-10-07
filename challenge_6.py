@@ -52,9 +52,6 @@ def solution(states):
 	terminals = [x for x in enumerate(states) if not sum(x[1])]
 	terminals2 = [i for i, x in enumerate(states) if sum(x) == 0]
 	
-	#for state in terminals:
-	#	print(state)
-	
 	links = {i: {} for i in range(len(states))}
 	for i_pos, i_vals in enumerate(states):
 		for o_pos, o_val in enumerate(i_vals):
