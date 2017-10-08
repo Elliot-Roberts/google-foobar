@@ -1,7 +1,6 @@
 import math
 import operator
 from functools import reduce
-from timeit import timeit
 
 # good
 m = [
@@ -53,7 +52,7 @@ prob6 = [
     [0, 0, 0, 0, 0, 0],
 ]
 
-# TODO solve these ones:
+# unsure
 prob4 = [
     [7, 0, 0, 0, 0, 3, 2, 5, 0, 0],
     [0, 6, 0, 3, 0, 0, 0, 7, 0, 0],
@@ -67,6 +66,7 @@ prob4 = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 ]
 
+# unsure
 prob5 = [
     [1, 1, 0, 3, 0, 7],
     [0, 2, 4, 0, 0, 1],
@@ -199,6 +199,9 @@ def answer(states):
     
     :param states: probability tree represented as 2D list
     """
+    for i in range(len(states)):
+        states[i][i] = 0
+    
     terminals = [i for i, x in enumerate(states) if sum(x) == 0]
     basics, loops = explore(0, states, terminals)
     
@@ -228,13 +231,12 @@ def answer(states):
     den = reduce(lcm, dens)
     result = [(den // dens[x]) * nums[x] for x in range(len(nums))]
     
-    # print(den - sum(result))
+    print(den - sum(result))
     
     result.append(den)
     
-    # print(result)
+    print(result)
     return result
 
 
-print(timeit('answer(prob1)', globals=globals(), number=10000))
-answer(prob4)
+answer(prob5)
