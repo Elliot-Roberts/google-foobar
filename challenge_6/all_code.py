@@ -68,7 +68,7 @@ prob4 = [
 
 ]
 
-# unsure
+# unsure/good
 prob5 = [
     [1, 1, 0, 3, 0, 7],
     [0, 2, 4, 0, 0, 1],
@@ -101,7 +101,7 @@ def path_prob(path, states):
     :param states: tree
     :return: numerators and denominators of probabilities in path
     """
-    nums = [states[path[x]][path[x + 1]] for x in range(len(path) - 1)]
+    nums = [states[path[x]][path[x + 1]] for x in range(len(path) - 1)]  # iterates AB BC CD DE
     dens = [sum(states[x]) for x in path[:-1]]
     
     return nums, dens
@@ -110,6 +110,7 @@ def path_prob(path, states):
 def prob_condense(nums, dens):
     """
     multiplies and reduces given fractions
+    CANNOT HANDLE 0 DENOMINATORS
     
     :param nums: numerators of the fractions
     :param dens: denominators of the fractions
@@ -126,6 +127,7 @@ def prob_condense(nums, dens):
 def prob_combine(nums, dens):
     """
     adds list of probabilities together
+    CANNOT HANDLE 0 DENOMINATORS
     
     :param nums: numerators of probabilities
     :param dens: denominators of probabilities
@@ -147,7 +149,7 @@ def loop_prob_effect(num, den):
     :param den: denominator
     :return: numerator, denominator
     """
-    return den, den - num
+    return den, den - num  # 1 / (1-(n/d))
 
 
 def explore(node, tree, terminals):
@@ -166,9 +168,11 @@ def explore(node, tree, terminals):
     loops = set()
     
     while True:
+        
         if node in terminals:
             cur_path.append(node)
             basics.append(cur_path)
+            
             if alternates:
                 alt = alternates[-1]
                 del alternates[-1]
@@ -176,10 +180,13 @@ def explore(node, tree, terminals):
                 cur_path = alt[0]
             else:
                 break
+        
         elif node in cur_path:
+            # loop found
             loop_start = cur_path.index(node)
             cur_path.append(node)
-            loops.add(tuple(cur_path[loop_start:]))
+            loops.add(tuple(cur_path[loop_start:]))  # get only loop (ABCDEFD -> DEFD)
+            
             if alternates:
                 alt = alternates[-1]
                 del alternates[-1]
@@ -187,6 +194,7 @@ def explore(node, tree, terminals):
                 cur_path = alt[0]
             else:
                 break
+        
         else:
             cur_path.append(node)
             choices = [(cur_path[:], i) for i, x in enumerate(tree[node]) if x != 0]
@@ -198,12 +206,12 @@ def explore(node, tree, terminals):
 
 def explore2(node, tree, terminals):
     """
-    explores a tree and returns all paths to terminal points as well as identifies loops
+    explores a tree and returns all paths to terminal points while avoiding loops
     
     :param node: current node being evaluated
     :param tree: tree to evaluate
     :param terminals: terminal nodes of the tree
-    :return: tuple of the paths and loops found respectively
+    :return: tuple of the paths found
     """
     alternates = []
     cur_path = []
@@ -211,9 +219,11 @@ def explore2(node, tree, terminals):
     basics = []
     
     while True:
+        
         if node in terminals:
             cur_path.append(node)
             basics.append(cur_path)
+            
             if alternates:
                 alt = alternates[-1]
                 del alternates[-1]
@@ -221,7 +231,9 @@ def explore2(node, tree, terminals):
                 cur_path = alt[0]
             else:
                 break
+        
         elif node in cur_path:
+            # loop found
             if alternates:
                 alt = alternates[-1]
                 del alternates[-1]
@@ -229,6 +241,54 @@ def explore2(node, tree, terminals):
                 cur_path = alt[0]
             else:
                 break
+        
+        else:
+            cur_path.append(node)
+            choices = [(cur_path[:], i) for i, x in enumerate(tree[node]) if x != 0]
+            alternates += choices[:-1]
+            node = choices[-1][1]
+    
+    return basics
+
+
+def explore2b(tree, terminals):
+    """
+    explores a tree and returns all paths to terminal points while avoiding loops
+    
+    :param tree: tree to evaluate
+    :param terminals: terminal nodes of the tree
+    :return: tuple of the paths found
+    """
+    alternates = []
+    cur_path = []
+    node = 0
+    
+    basics = []
+    
+    while True:
+        
+        if node in terminals:
+            cur_path.append(node)
+            basics.append(cur_path)
+            
+            if alternates:
+                alt = alternates[-1]
+                del alternates[-1]
+                node = alt[1]
+                cur_path = alt[0]
+            else:
+                break
+        
+        elif node in cur_path:
+            # loop found
+            if alternates:
+                alt = alternates[-1]
+                del alternates[-1]
+                node = alt[1]
+                cur_path = alt[0]
+            else:
+                break
+        
         else:
             cur_path.append(node)
             choices = [(cur_path[:], i) for i, x in enumerate(tree[node]) if x != 0]
@@ -242,8 +302,12 @@ def answer(states):
     """
     evaluates probabilities in given tree
     
-    :param states: probability tree represented as 2D list
+    now that I've figured out the better way to do this I don't feel like going back and documenting
+    this one
+    
+    :param states: probability tree represented as 2D array
     """
+    # remove the chances that a state will stay the same
     for i in range(len(states)):
         states[i][i] = 0
     
@@ -282,10 +346,12 @@ def answer(states):
 
 def answer2(states):
     """
-    same but with fewer confusing dict comprehensions
+    same but with one of the more complex dictionary comprehensions made into a number of for loops
+    with really long and specific variable names
 
-    :param states: probability tree represented as 2D list
+    :param states: probability tree represented as 2D array
     """
+    # remove the chances that a state will stay the same
     for i in range(len(states)):
         states[i][i] = 0
     
@@ -304,12 +370,7 @@ def answer2(states):
                            for x, y in grouped.items()}
     
     if loops:
-        # grouped_loop_probs = {x: [prob_condense(*zip(*(w[1]
-        #                                                for w in loop_probs
-        #                                                if w[0].intersection(z))))
-        #                           for z in y]
-        #                       for x, y in grouped.items()}
-
+        
         grouped_loop_probs = {}
         for grouped_index, grouped_value in grouped.items():
             
@@ -355,33 +416,51 @@ def answer2(states):
 
 def answer3(states):
     """
-    evaluates probabilities in given tree
+    evaluates probabilities in given tree, excluding loops
 
-    :param states: probability tree represented as 2D list
+    :param states: probability tree represented as 2D array
     """
+    # remove the chances that a state will stay the same (they do nothing and cause issues)
     for i in range(len(states)):
         states[i][i] = 0
     
+    # get the terminal states and all paths to them
     terminals = [i for i, x in enumerate(states) if sum(x) == 0]
-    basics = explore2(0, states, terminals)
+    basics = explore2b(states, terminals)
     
-    grouped = {x: [y for y in basics if y[-1] == x] for x in terminals}
+    # group all paths by terminal (leaving an empty list for unreachable terminals)
+    grouped = {x: [y 
+                   for y in basics 
+                   if y[-1] == x] 
+               for x in terminals}
     
-    grouped_basic_probs = {x: [prob_condense(*path_prob(z, states)) for z in y] for x, y in grouped.items()}
+    # get the total probability of each path
+    grouped_basic_probs = {x: [prob_condense(*path_prob(z, states)) 
+                               for z in y] 
+                           for x, y in grouped.items()}
     
-    answer_probs = {x: prob_combine(*zip(*y)) if y else (0, 1) for x, y in grouped_basic_probs.items()}
+    # add paths of common terminals together
+    answer_probs = {x: prob_combine(*zip(*y)) 
+                    if y 
+                    else (0, 1)  # to avoid div by zero issues
+                    for x, y in grouped_basic_probs.items()}
     
-    nums = [answer_probs[x][0] for x in sorted(answer_probs.keys())]
-    dens = [answer_probs[x][1] for x in sorted(answer_probs.keys())]
+    # manual zip while making sure that the terminals are in the right order
+    sorted_keys = sorted(answer_probs.keys())
+    nums = [answer_probs[x][0] for x in sorted_keys]
+    dens = [answer_probs[x][1] for x in sorted_keys]
     
+    # adjust all fractions to common denominator
     den = reduce(lcm, dens)
     result = [(den // dens[x]) * nums[x] for x in range(len(nums))]
     
+    # throw out that denominator and use the sum of the numerators instead
     result.append(sum(result))
     
     return result
 
 
+"""
 solve = prob4
 complexity = (len(solve) ** 2) // 32 + 1
 
@@ -400,3 +479,4 @@ print()
 print("second method:")
 print("time: {} microseconds average".format(timeit("answer3(solve)", globals=globals(), number=iterations) * comp))
 print("result: {}".format(answer3(solve)))
+"""
