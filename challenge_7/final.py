@@ -26,7 +26,7 @@ def get_if_down(num):
     return ops
 
 
-def inneficient(n):
+def answer(n):
     num = int(n)
     
     ops = 0
