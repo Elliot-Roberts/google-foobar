@@ -6,6 +6,7 @@ from functools import reduce
 def lcm(a, b):
     """
     calculates lowest common multiple of a and b
+    CANNOT HANDLE 0 DENOMINATORS
     
     :param a: integer
     :param b: integer

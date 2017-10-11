@@ -3,6 +3,11 @@ import operator
 from functools import reduce
 from timeit import timeit
 
+#####################################
+# best answer function: answer3()   #
+# best tree function:   explore2b() #
+#####################################
+
 # good
 m = [
     [0, 1, 0, 0, 0, 1],
