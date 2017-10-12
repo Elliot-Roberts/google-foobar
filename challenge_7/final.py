@@ -39,6 +39,7 @@ def get_if_down(num):
 def answer(n):
     """
     returns smallest number of steps (a step being any of [+1, -1, //2]) required to reduce n to 1
+    this approach seems like it should be really slow, but it works...
     
     :param n: number to reduce
     """
