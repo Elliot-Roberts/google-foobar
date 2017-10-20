@@ -42,6 +42,10 @@ def solve(keys, key_factor, a, start_key=0):
     creates `a` sets populated by keys such that any combination of `b` sets will collectively have
     all unique keys, and no combination of `b`-1 keys has this.
     
+    :param keys: total number of unique keys
+    :param key_factor: number of duplicates of each key
+    :param a: number of sets in current solve
+    :param start_key: lowest key value in current solve
     """
     # set up useful variables
     total_keys = keys * key_factor  # count of all keys in the sets including duplicates
