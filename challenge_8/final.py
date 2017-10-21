@@ -111,8 +111,6 @@ def nice_print(arr, indent=0):
     if isinstance(arr, list):
         arr = np.asarray(arr)
         print(arr)
-        #for x in arr:
-        #    print("{}{}".format(" "*indent, x))
     else:
         print("{}{}".format(" " * indent, arr))
 
@@ -122,7 +120,6 @@ for i in range(1, 10):
         print("-----------------------------------", i, j)
         ans = answer(i, j)
         nice_print(ans)
-        #print(len(ans))
         
         if j > 1:
             for z in itertools.combinations(ans, j - 1):
@@ -131,4 +128,3 @@ for i in range(1, 10):
                     nice_print(z)
                     break
         print("\n")
-
