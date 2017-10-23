@@ -1,10 +1,15 @@
-buns1 = [
+import operator
+import itertools
+
+buns1 = ([
   [0, 2, 2, 2, -1],  # 0 = Start
   [9, 0, 2, 2, -1],  # 1 = Bunny 0
   [9, 3, 0, 2, -1],  # 2 = Bunny 1
   [9, 3, 2, 0, -1],  # 3 = Bunny 2
   [9, 3, 2, 2,  0],  # 4 = Bulkhead
-]
+], 1)
+
+buns2 = ([[0, 1, 1, 1, 1], [1, 0, 1, 1, 1], [1, 1, 0, 1, 1], [1, 1, 1, 0, 1], [1, 1, 1, 1, 0]], 3)
 
 
 def path_costs(path, states):
@@ -19,7 +24,108 @@ def path_costs(path, states):
     return costs
 
 
-def explore(tree, terminals):
+def answer(tree, time):
+    transform = list(zip(*tree))
+    
+    negatives = set((i, i2, x) for i, y in enumerate(tree) for i2, x in enumerate(y) if x < 0)
+    
+    for x in negatives:
+        for i, y in enumerate(tree[x[1]]):
+            if (y + x[2]) < tree[x[0]][i]:
+                print(x[0], x[1], i)
+    
+    mins = [(x, sum(transform[x]), sum(tree[x])) for x in range(len(tree))]
+    mins = sorted(mins, key=lambda x: x[1]+x[2])
+    print(mins)
+    return negatives
+    
+
+def subseqs(a, betters):
+    subs = []
+    for x in betters:
+        for y in range(len(a)-1):
+            if a[y:y+2] == (x[0], x[2]):
+                subs.append(x)
+                break
+    return subs
+
+
+def insert(a, b):
+    pos = next(x+1 for x in range(len(b)-1) if b[x:x+2] == (a[0], a[2]))
+    return  b[:pos] + (a[1],) + b[pos:]
+
+
+def buns(path):
+    end = path[-1]
+    return sorted([x-1 for x in path[1:] if x != end])
+
+
+def best(stats, tree, time):
+    paths = [x for x in stats if x[2] <= time]
+    #paths = sorted(paths, key=buns)
+    return sorted(stats, key=lambda x: len(x[1]), reverse=True)
+
+
+def improve(path, betters):
+    fixed = path
+    subs = subseqs(path, betters)
+    for sub in subs:
+        fixed = insert(sub, fixed)
+    return fixed
+                
+
+
+def answer2(tree, time):
+    negatives = set((i, i2, x) for i, y in enumerate(tree) for i2, x in enumerate(y) if x < 0)
+    
+    betters = []
+    for x in negatives:
+        for i, y in enumerate(tree[x[1]]):
+            if (y + x[2]) < tree[x[0]][i]:
+                betters.append((x[0], x[1], i))
+    
+    print(betters)
+    print()
+    tree_size = len(tree)
+    door = tree_size - 1
+    combos = [itertools.permutations(range(1, door), x) for x in range(door)]
+    paths = [(0,) + x + (door,) for x in itertools.chain.from_iterable(combos)]
+    for x in paths:
+        print(x)
+    
+    improved = []
+    for x in paths:
+        x2 = improve(x, betters)
+        improved.append(x2)
+    
+    print()
+    nice_print(improved)
+    print()
+    stats = [(x, buns(x), sum(path_costs(x, tree))) for x in improved]
+    stats = sorted(stats, key=lambda x: len(x[1]), reverse=True)
+    thresh = next(x for x in stats if x[2] <= time)
+    overs = list(itertools.takewhile(lambda x: len(x[1]) > len(thresh[1]), stats))
+    improvements = []
+    for x in overs:
+        x = x[0]
+        while sum(path_costs(x, tree)) > time:
+            subs = subseqs(x, betters)
+            if not subs:
+                break
+            else:
+                for sub in subs:
+                    x = insert(sub, x)
+        else:
+            improvements.append(x)
+    
+    finals = [(x, buns(x), sum(path_costs(x, tree))) for x in improvements] + [thresh]
+    print(finals)
+    
+    return best(finals, tree, time)[0][1]
+    
+
+
+def explore(tree, time):
     """
     explores a tree and returns all paths to terminal points while avoiding loops
 
@@ -27,6 +133,10 @@ def explore(tree, terminals):
     :param terminals: terminal nodes of the tree
     :return: tuple of the paths found
     """
+    tree_size = len(tree)
+    door = tree_size - 1
+    bunnies = set(range(1, tree_size-1))
+    print(bunnies)
     alternates = []
     cur_path = []
     node = 0
@@ -34,44 +144,57 @@ def explore(tree, terminals):
     basics = []
     
     while True:
+        full_path = cur_path + [node]
         
-        if node in terminals:
-            cur_path.append(node)
-            basics.append(cur_path)
+        if node == door:
+            if sum(path_costs(full_path, tree)) <= time:
+                basics.append(full_path)
             
-            if alternates:
-                alt = alternates[-1]
-                del alternates[-1]
-                node = alt[1]
-                cur_path = alt[0]
-            else:
-                break
+            if bunnies.issubset(cur_path):
+                if alternates:
+                    alt = alternates[-1]
+                    del alternates[-1]
+                    node = alt[1]
+                    cur_path = alt[0]
+                    continue
+                else:
+                    break
         
         if node in cur_path:
             # loop found
-            loop_start = cur_path.index(node)
-            cur_path.append(node)
-            loop = cur_path[loop_start:]
-            print(loop)
-            print(path_costs(loop, tree))
-            print()
-            if sum(path_costs(loop, tree)) < 2:
+            #loop_start = len(cur_path) - next(i for i, x in enumerate(reversed(cur_path)) if x == node)
+            loop = full_path[len(cur_path)-1:]
+            #print(loop)
+            #print(sum(path_costs(loop, tree)))
+            #print()
+            if sum(path_costs(loop, tree)) < 1:
                 print(loop)
-            if alternates:
-                alt = alternates[-1]
-                del alternates[-1]
-                node = alt[1]
-                cur_path = alt[0]
+                print("costs:", sum(path_costs(loop, tree)))
+                print()
             else:
-                break
+                if alternates:
+                    alt = alternates[-1]
+                    del alternates[-1]
+                    node = alt[1]
+                    cur_path = alt[0]
+                    continue
+                else:
+                    break
         
-        else:
-            cur_path.append(node)
-            choices = [(cur_path[:], i) for i, x in enumerate(tree[node]) if x != 0]
-            alternates += choices[:-1]
-            node = choices[-1][1]
+        cur_path.append(node)
+        choices = [(cur_path[:], i) for i, x in enumerate(tree[node]) if x != 0]
+        alternates += choices[:-1]
+        node = choices[-1][1]
     
     return basics
 
 
-print(explore(buns1, [4]))
+def nice_print(arr, indent=0):
+    if isinstance(arr, list):
+        for x in arr:
+            print("{}{}".format(" "*indent, x))
+    else:
+        print("{}{}".format(" " * indent, arr))
+
+
+print(answer2(*buns2))
