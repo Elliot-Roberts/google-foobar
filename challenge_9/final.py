@@ -1,10 +1,18 @@
 import itertools
 import operator
 
+buns3 = ([
+    [0, 9, 0, 9, 1],
+    [0, 0, 9, 0, 1],
+    [9, 9, 0, 9, 1],
+    [9, 9, 9, 0,-2],
+    [-1,-1,-1,-1,0],
+], 1)
 
-def path_costs(path, states):
+
+def path_cost(path, states):
     costs = [states[path[x]][path[x + 1]] for x in range(len(path) - 1)]  # iterates AB BC CD DE
-    return costs
+    return sum(costs)
 
 
 def subseqs(a, betters):
@@ -32,7 +40,7 @@ def insert(a, b):
 
 def buns(path):
     end = path[-1]
-    return sorted([x - 1 for x in path[1:] if x != end])
+    return sorted(list(set(x - 1 for x in path[1:] if x != end)))
 
 
 def best(stats, time):
@@ -63,29 +71,36 @@ def answer(tree, time):
     combos = [itertools.permutations(range(1, door), x) for x in range(door)]
     paths = [(0,) + x + (door,) for x in itertools.chain.from_iterable(combos)]
     
-    improved = []
-    for x in paths:
-        x2 = improve(x, betters)
-        improved.append(x2)
+    improved = [improve(x, betters) for x in paths]
+    #for x in paths:
+    #    x2 = improve(x, betters)
+    #    improved.append(x2)
     
-    stats = [(x, buns(x), sum(path_costs(x, tree))) for x in improved]
+    stats = [(x, buns(x), path_cost(x, tree)) for x in improved]
     stats = sorted(stats, key=lambda x: len(x[1]), reverse=True)
     thresh = next(x for x in stats if x[2] <= time)
-    overs = list(itertools.takewhile(lambda x: len(x[1]) > len(thresh[1]), stats))
+    overs = list(itertools.takewhile(lambda x: x[2] > thresh[2], stats))
+    overs = [x for x in overs if len(x[1]) > len(thresh[1])]
+    print(overs)
+    print()
     improvements = []
     for x in overs:
         x = x[0]
-        while sum(path_costs(x, tree)) > time:
-            subs = subseqs(x, betters)
-            if not subs:
+        while path_cost(x, tree) > time:
+            new_x = improve(x, betters)
+            if path_cost(new_x, tree) >= path_cost(x, tree):
                 break
             else:
-                for sub in subs:
-                    x = insert(sub, x)
+                x = new_x
+                improvements.append(new_x)
         else:
             improvements.append(x)
     
-    finals = [(x, buns(x), sum(path_costs(x, tree))) for x in improvements] + [thresh]
+    print(improvements)
+    print()
+    finals = [(x, buns(x), path_cost(x, tree)) for x in improvements] + [thresh]
     
-    return best(finals, time)[0][1]
+    return best(finals, time)
+
+print(answer(*buns3))
 
