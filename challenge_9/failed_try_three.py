@@ -1,5 +1,13 @@
 import itertools
 
+buns1 = ([
+  [0, 2, 2, 2, 2],  # 0 = Start
+  [-1, 0, 2, 2, 2],  # 1 = Bunny 0
+  [-1, 3, 0, 2, 2],  # 2 = Bunny 1
+  [-1, 3, 2, 0, 2],  # 3 = Bunny 2
+  [-1, 3, 2, 2,  0],  # 4 = Bulkhead
+], 3)
+
 
 def path_cost(path, states):
     costs = [states[path[x]][path[x + 1]] for x in range(len(path)-1)]
@@ -62,4 +70,6 @@ def answer(tree, time):
                 break
         else:
             return buns(new_path)
+
+print(answer(*buns1))
 
