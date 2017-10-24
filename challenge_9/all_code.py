@@ -12,7 +12,16 @@ buns1 = ([
 buns2 = ([[0, 1, 1, 1, 1], [1, 0, 1, 1, 1], [1, 1, 0, 1, 1], [1, 1, 1, 0, 1], [1, 1, 1, 1, 0]], 3)
 
 
-def path_costs(path, states):
+buns3 = ([
+    [0, 9, 0, 9, 1],
+    [0, 0, 9, 0, 1],
+    [9, 9, 0, 9, 1],
+    [9, 9, 9, 0,-2],
+    [-1,-1,-1,-1,0],
+], 1)
+
+
+def path_cost(path, states):
     """
     finds the simple probability of a path through states
 
@@ -21,7 +30,7 @@ def path_costs(path, states):
     :return: numerators and denominators of probabilities in path
     """
     costs = [states[path[x]][path[x + 1]] for x in range(len(path) - 1)]  # iterates AB BC CD DE
-    return costs
+    return sum(costs)
 
 
 def answer(tree, time):
@@ -43,21 +52,29 @@ def answer(tree, time):
 def subseqs(a, betters):
     subs = []
     for x in betters:
-        for y in range(len(a)-1):
-            if a[y:y+2] == (x[0], x[2]):
+        if x[0] == x[2]:
+            if x[0] in a:
                 subs.append(x)
-                break
+        else:
+            for y in range(len(a)-1):
+                if a[y:y+2] == (x[0], x[2]):
+                    subs.append(x)
+                    break
     return subs
 
 
 def insert(a, b):
-    pos = next(x+1 for x in range(len(b)-1) if b[x:x+2] == (a[0], a[2]))
-    return  b[:pos] + (a[1],) + b[pos:]
+    if a[0] == a[2]:
+        pos = b.index(a[0])
+        return b[:pos] + a[:2] + b[pos:]
+    else:
+        pos = next(x+1 for x in range(len(b)-1) if b[x:x+2] == (a[0], a[2]))
+        return  b[:pos] + (a[1],) + b[pos:]
 
 
 def buns(path):
     end = path[-1]
-    return sorted([x-1 for x in path[1:] if x != end])
+    return sorted(list(set(x-1 for x in path[1:] if x != end)))
 
 
 def best(stats, tree, time):
@@ -101,14 +118,14 @@ def answer2(tree, time):
     print()
     nice_print(improved)
     print()
-    stats = [(x, buns(x), sum(path_costs(x, tree))) for x in improved]
+    stats = [(x, buns(x), path_cost(x, tree)) for x in improved]
     stats = sorted(stats, key=lambda x: len(x[1]), reverse=True)
     thresh = next(x for x in stats if x[2] <= time)
     overs = list(itertools.takewhile(lambda x: len(x[1]) > len(thresh[1]), stats))
     improvements = []
     for x in overs:
         x = x[0]
-        while sum(path_costs(x, tree)) > time:
+        while path_cost(x, tree) > time:
             subs = subseqs(x, betters)
             if not subs:
                 break
@@ -118,7 +135,8 @@ def answer2(tree, time):
         else:
             improvements.append(x)
     
-    finals = [(x, buns(x), sum(path_costs(x, tree))) for x in improvements] + [thresh]
+    assert not improvements
+    finals = [(x, buns(x), path_cost(x, tree)) for x in improvements] + [thresh]
     print(finals)
     
     return best(finals, tree, time)[0][1]
@@ -147,7 +165,7 @@ def explore(tree, time):
         full_path = cur_path + [node]
         
         if node == door:
-            if sum(path_costs(full_path, tree)) <= time:
+            if path_cost(full_path, tree) <= time:
                 basics.append(full_path)
             
             if bunnies.issubset(cur_path):
@@ -165,11 +183,11 @@ def explore(tree, time):
             #loop_start = len(cur_path) - next(i for i, x in enumerate(reversed(cur_path)) if x == node)
             loop = full_path[len(cur_path)-1:]
             #print(loop)
-            #print(sum(path_costs(loop, tree)))
+            #print(sum(path_cost(loop, tree)))
             #print()
-            if sum(path_costs(loop, tree)) < 1:
+            if path_cost(loop, tree) < 1:
                 print(loop)
-                print("costs:", sum(path_costs(loop, tree)))
+                print("costs:", path_cost(loop, tree))
                 print()
             else:
                 if alternates:
@@ -197,4 +215,4 @@ def nice_print(arr, indent=0):
         print("{}{}".format(" " * indent, arr))
 
 
-print(answer2(*buns2))
+print(answer2(*buns3))

@@ -1,16 +1,6 @@
 import itertools
 import operator
 
-buns1 = ([
-             [0, 2, 2, 2, -1],  # 0 = Start
-             [9, 0, 2, 2, -1],  # 1 = Bunny 0
-             [9, 3, 0, 2, -1],  # 2 = Bunny 1
-             [9, 3, 2, 0, -1],  # 3 = Bunny 2
-             [9, 3, 2, 2, 0],  # 4 = Bulkhead
-         ], 1)
-
-buns2 = ([[0, 1, 1, 1, 1], [1, 0, 1, 1, 1], [1, 1, 0, 1, 1], [1, 1, 1, 0, 1], [1, 1, 1, 1, 0]], 3)
-
 
 def path_costs(path, states):
     costs = [states[path[x]][path[x + 1]] for x in range(len(path) - 1)]  # iterates AB BC CD DE
@@ -20,16 +10,24 @@ def path_costs(path, states):
 def subseqs(a, betters):
     subs = []
     for x in betters:
-        for y in range(len(a) - 1):
-            if a[y:y + 2] == (x[0], x[2]):
+        if x[0] == x[2]:
+            if x[0] in a:
                 subs.append(x)
-                break
+        else:
+            for y in range(len(a)-1):
+                if a[y:y+2] == (x[0], x[2]):
+                    subs.append(x)
+                    break
     return subs
 
 
 def insert(a, b):
-    pos = next(x + 1 for x in range(len(b) - 1) if b[x:x + 2] == (a[0], a[2]))
-    return b[:pos] + (a[1],) + b[pos:]
+    if a[0] == a[2]:
+        pos = b.index(a[0])
+        return b[:pos] + a[:2] + b[pos:]
+    else:
+        pos = next(x+1 for x in range(len(b)-1) if b[x:x+2] == (a[0], a[2]))
+        return  b[:pos] + (a[1],) + b[pos:]
 
 
 def buns(path):
@@ -86,10 +84,8 @@ def answer(tree, time):
                     x = insert(sub, x)
         else:
             improvements.append(x)
-    print(improvements)
+    
     finals = [(x, buns(x), sum(path_costs(x, tree))) for x in improvements] + [thresh]
     
     return best(finals, time)[0][1]
 
-
-print(answer(*buns1))
