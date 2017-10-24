@@ -1,5 +1,4 @@
 import itertools
-import operator
 
 
 def path_cost(path, states):
