@@ -64,7 +64,7 @@ def answer(tree, time):
     tree_size = len(tree)
     door = tree_size - 1
     
-    pairs = itertools.permutations(range(tree_size), 2)
+    pairs = itertools.product(range(tree_size), repeat=2)
     
     full_set = list(range(tree_size))
     
