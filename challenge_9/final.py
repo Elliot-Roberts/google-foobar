@@ -5,7 +5,7 @@ def paths_between(a, b, nodes):
     """
     returns all paths between `a` and `b` using given options
     """
-    middles = [n for n in nodes if not n in (a, b)]
+    middles = [n for n in nodes if n not in (a, b)]
     mid_l = len(middles) + 1
     perms = itertools.chain.from_iterable(itertools.permutations(middles, x) for x in range(mid_l))
     return ((a,) + x + (b,) for x in perms)
@@ -46,7 +46,7 @@ def insert(a, b):
     else:
         ends = (a[0], a[-1])
         pos = next(x+1 for x in range(len(b)-1) if b[x:x+2] == ends)
-        return  b[:pos-1] + a + b[pos+1:]
+        return b[:pos-1] + a + b[pos+1:]
 
 
 def buns(path):
@@ -54,12 +54,12 @@ def buns(path):
     returns sorted list of all bunnies in path
     """
     non_buns = (0, path[-1])
-    return sorted(list(set(x-1 for x in path[1:-1] if not x in non_buns)))
+    return sorted(list(set(x-1 for x in path[1:-1] if x not in non_buns)))
 
 
 def answer(tree, time):
     """
-    returns list of saveable bunnies within time limit
+    returns list of savable bunnies within time limit
     """
     tree_size = len(tree)
     door = tree_size - 1
@@ -67,9 +67,8 @@ def answer(tree, time):
     pairs = itertools.permutations(range(tree_size), 2)
     
     full_set = list(range(tree_size))
-    bun_set = full_set[1:-1]
     
-    betters = [min(paths_between(*x, full_set), key=lambda y: path_cost(y, tree))
+    betters = [min(paths_between(x[0], x[1], full_set), key=lambda y: path_cost(y, tree))
                for x in pairs]
     
     betters = [x for x in betters if len(x) > 2]
@@ -90,4 +89,4 @@ def answer(tree, time):
                 break
         else:
             return buns(new_path)
-
+    return []

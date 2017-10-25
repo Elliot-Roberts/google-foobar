@@ -71,5 +71,5 @@ def answer(tree, time):
         else:
             return buns(new_path)
 
-print(answer(*buns1))
 
+print(answer(*buns1))
