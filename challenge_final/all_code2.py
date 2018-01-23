@@ -123,8 +123,6 @@ def answer(arr):
             options[x][y] = frozenset(options[x][y])
         options[x] = tuple(options[x])
     options = tuple(options)
-                
-    # for i in options: print(i)
     
     single_rows = col.defaultdict(dict)
     
