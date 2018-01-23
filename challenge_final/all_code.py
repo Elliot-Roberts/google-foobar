@@ -1,5 +1,6 @@
 import collections as col
 import itertools as it
+from timeit import timeit
 
 g = [
 [1, 0, 1, 0, 0, 1, 1, 1],
@@ -7,25 +8,36 @@ g = [
 [1, 1, 1, 0, 0, 0, 1, 0],
 [1, 0, 1, 0, 0, 0, 1, 0],
 [1, 0, 1, 0, 0, 1, 1, 1]]
-
 g2 = [
 [1, 0, 1],
 [0, 1, 0],
 [1, 0, 1]]
-
 g3 = [
-[0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0]]
+[0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0]]
+g4 = [
+[1, 1, 0, 1, 0, 1, 0, 1, 1, 0],
+[1, 1, 0, 0, 0, 0, 1, 1, 1, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+[0, 1, 0, 0, 0, 0, 1, 1, 0, 0]]
+g5 = [[0]*9]*2
+
+ref = [x[::-1] for x in it.product((0, 1), repeat=4)]
+compat = {
+    (0, 0): {0, 4, 8, 12},
+    (1, 0): {1, 5, 9, 13},
+    (0, 1): {2, 6, 10, 14},
+    (1, 1): {3, 7, 11, 15},
+}
+
+pieces = col.defaultdict(dict)
 
 
 def solve_piece(options, progress, length):
     if len(progress[0]) > length:
         return [tuple(progress[1])]
-
-    ref = [x[::-1] for x in it.product((0, 1), repeat=4)]
     
     results = []
     for x in options[0]:
@@ -38,23 +50,16 @@ def solve_piece(options, progress, length):
 
 
 def solve_row(options, restrict):
-    compat = {
-        (0, 0): {0, 4, 8, 12},
-        (1, 0): {1, 5, 9, 13},
-        (0, 1): {2, 6, 10, 14},
-        (1, 1): {3, 7, 11, 15},
-    }
-    options = [x.copy() for x in options]
+    options = [set(x) for x in options]
     if restrict:
         for i in range(len(options)):
             options[i].intersection_update(compat[restrict[i:i+2]])
-
-    ref = [x[::-1] for x in it.product((0, 1), repeat=4)]
     
     results = []
     for x in options[0]:
         bit = ref[x]
         progress = [list(bit[:2]), list(bit[2:])]
+        # lookup = pieces[options[1:]].get(cur[1])
         results += solve_piece(options[1:], progress, len(options))
     
     return results
@@ -67,8 +72,6 @@ def answer(arr):
     
     rows = len(arr)
     columns = len(arr[0])
-    
-    ref = [x[::-1] for x in it.product((0, 1), repeat=4)]
     # for i in enumerate(ref): print(*i)
     
     options = [[set() for y in x] for x in arr]
@@ -94,20 +97,41 @@ def answer(arr):
                 if y < columns-1:
                     if arr[x][y+1]:
                         options[x][y].difference_update([10, 11, 14, 15])
+
+            options[x][y] = frozenset(options[x][y])
+        options[x] = tuple(options[x])
+    options = tuple(options)
                 
     # for i in options: print(i)
+    
+    single_rows = col.defaultdict(dict)
+    
     total = 0
-    stack = [(0, None)]
+
+    new_rows = solve_row(options[0], None)
+    if rows > 1:
+        stack = [(1, x) for x in new_rows]
+    else:
+        return len(new_rows)
     while len(stack) > 0:
         cur = stack.pop()
-        new_rows = solve_row(options[cur[0]], cur[1])
+        
+        lookup = single_rows[options[cur[0]]].get(cur[1])
+        # lookup = False
+        if lookup:
+            new_rows = lookup
+        else:
+            new_rows = solve_row(options[cur[0]], cur[1])
+            single_rows[options[cur[0]]][cur[1]] = new_rows
+        
         next_row = cur[0] + 1
         if next_row < rows:
             stack += [(next_row, x) for x in new_rows]
         else:
             total += len(new_rows)
     
-    print(total)
+    return total
     
 
-answer(g3)
+# print(timeit("answer(g4)", number=10, globals=globals()))
+print(answer(g4))
