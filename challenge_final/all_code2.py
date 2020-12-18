@@ -25,6 +25,8 @@ g4 = [
 
 g5 = [[0]*9]*50
 
+g6 = [[1]]
+
 ref = [x[::-1] for x in it.product((0, 1), repeat=4)]
 compat = {
     (0, 0): {0, 4, 8, 12},
@@ -36,6 +38,8 @@ compat = {
 pieces = col.defaultdict(dict)
 saved_rows = col.defaultdict(dict)
 single_rows = col.defaultdict(dict)
+print()
+print()
 
 def solve_piece(options, progress):
 
@@ -168,5 +172,5 @@ def answer(arr):
 
 
 # print(timeit("answer(g4)", number=10, globals=globals()))
-print(answer(g3))
+print(answer(g4))
 

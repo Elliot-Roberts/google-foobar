@@ -50,7 +50,7 @@ def solve(keys, key_factor, a, start_key=0):
     # set up useful variables
     total_keys = keys * key_factor  # count of all keys in the sets including duplicates
     row_len = total_keys // a  # number of keys per set
-    end_keys = keys - row_len  # number of unique keys not included in the first row
+    end_keys = keys - row_len  # number of unique keys not included in the first set
     total_end_keys = end_keys * key_factor
     sub_a = a - 1  # number of sets after the first set
     
@@ -79,7 +79,7 @@ def solve(keys, key_factor, a, start_key=0):
             result[x] += sub2[x - 1]
     
     else:
-        # create iterator over each each end key each repeated `key_factor` times
+        # create iterator over each end key each repeated `key_factor` times
         end_key_set = list(range(start_key + row_len, start_key + keys))
         end_keys_full = itertools.chain.from_iterable(itertools.repeat(x, key_factor)
                                                       for x in end_key_set)
@@ -115,16 +115,22 @@ def nice_print(arr, indent=0):
         print("{}{}".format(" " * indent, arr))
 
 
-for i in range(1, 10):
-    for j in range(i + 1):
-        print("-----------------------------------", i, j)
-        ans = answer(i, j)
-        nice_print(ans)
-        
-        if j > 1:
-            for z in itertools.combinations(ans, j - 1):
-                if set(itertools.chain.from_iterable(z)) == set(itertools.chain.from_iterable(ans)):
-                    print("////////////////////bad////////////////////")
-                    nice_print(z)
-                    break
-        print("\n")
+def wew(a, b):
+    nice_print(answer(a, b))
+
+# 
+# for i in range(1, 10):
+#     for j in range(i + 1):
+#         print("-----------------------------------", i, j)
+#         ans = answer(i, j)
+#         nice_print(ans)
+# 
+#         if j > 1:
+#             for z in itertools.combinations(ans, j - 1):
+#                 if set(itertools.chain.from_iterable(z)) == set(itertools.chain.from_iterable(ans)):
+#                     print("////////////////////bad////////////////////")
+#                     nice_print(z)
+#                     break
+#         print("\n")
+
+nice_print(answer(7, 5))
